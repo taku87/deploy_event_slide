@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>図解でわかる！「デプロイってこういうこと」</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: #f0f2f5;
+        }
+        .slide {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            min-height: 65vh;
+        }
+        .slide.active {
+            display: flex;
+            opacity: 1;
+        }
+        .script-area {
+            background-color: #2d3748;
+            color: #e2e8f0;
+            border-top: 4px solid #4a5568;
+        }
+        .slide-content {
+            animation: fadeIn 0.8s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* アニメーション用スタイル */
+        .rocket-float {
+            animation: float 6s ease-in-out infinite;
+        }
+        .gear-spin {
+            animation: spin 10s linear infinite;
+        }
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .conveyor-belt {
+            animation: move-belt 4s linear infinite;
+        }
+        @keyframes move-belt {
+            from { background-position-x: 0; }
+            to { background-position-x: -100px; }
+        }
+
+        /* Slide 4 Interactive Styles */
+        .app-packet {
+            transition: all 2s cubic-bezier(0.5, 0, 0.5, 1);
+            opacity: 0;
+            transform: translate(0, 50%);
+        }
+        .status-dot {
+            transition: all 0.5s ease-in-out;
+        }
+        .fade-in-text {
+            opacity: 0;
+            transition: opacity 1s ease-in-out 1s;
+        }
+        .user-icons {
+            transition: opacity 1s ease-in-out;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen bg-stone-50">
+    <!-- メインコンテンツ：スライド表示領域 -->
+    <main id="presentation-container" class="flex-grow container mx-auto p-4 md:p-8 flex items-center justify-center">
+        <!-- Slides will be injected here by JS -->
+    </main>
+
+    <!-- フッター：台本とナビゲーション -->
+    <footer class="w-full sticky bottom-0">
+        <!-- 台本表示エリア -->
+        <div id="script-area" class="script-area p-4 md:p-6 text-sm md:text-base min-h-[100px]">
+            <p id="script-text"></p>
+        </div>
+        <!-- ナビゲーションコントロール -->
+        <div class="bg-gray-800 p-3 flex justify-between items-center">
+            <button id="prev-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                戻る
+            </button>
+            <div class="text-white">
+                <span id="current-slide-num">1</span> / <span id="total-slides-num"></span>
+            </div>
+            <button id="next-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">
+                次へ
+            </button>
+        </div>
+    </footer>
+
+    <script>
+        const slidesData = [
+            // Slide 1
+            {
+                content: `
+                    <div class="text-center relative w-full overflow-hidden slide-content">
+                        <svg class="w-16 h-16 text-gray-300 absolute top-1/4 left-1/4 opacity-50 gear-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        <svg class="w-24 h-24 text-gray-300 absolute top-10 right-10 opacity-40 rocket-float" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        <h1 class="text-4xl md:text-6xl font-bold text-gray-800">図解でわかる！</h1>
+                        <h2 class="text-3xl md:text-5xl font-bold text-blue-600 mt-4">「デプロイってこういうこと」</h2>
+                    </div>`,
+                script: "（このスライドはタイトルページのため、台本はなし）"
+            },
+            // Slide 2
+            {
+                content: `
+                    <div class="w-full max-w-4xl mx-auto slide-content">
+                        <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-8 text-center">今日のゴールは</h2>
+                        <ul class="space-y-6 text-xl md:text-2xl text-gray-700">
+                            <li class="flex items-start">
+                                <svg class="w-8 h-8 text-green-500 mr-4 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                <span>「デプロイ」が何かを<span class="font-bold text-blue-600">イメージ</span>できるようになる</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-8 h-8 text-green-500 mr-4 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                <span>実際のデプロイ作業を行う際に、<span class="font-bold text-blue-600">「今、何をしているか」</span>がわかるようになる</span>
+                            </li>
+                        </ul>
+                    </div>`,
+                script: "さて、今日は「デプロイ」について学んでいきます。今日のゴールはこちらです。「アプリ開発はデプロイが山場」という認識を持っている人は結構いるかと思いますが、そもそも「デプロイ」って何をしていることなのか、を学ぶ機会は少ないと感じています。今日はその「なぜ？」を解消していきましょう。"
+            },
+            // Slide 3
+            {
+                content: `<div class="text-center slide-content"><h1 class="text-4xl md:text-5xl font-bold text-gray-700">第1章：<br class="md:hidden"/>そもそも「デプロイ」って何？</h1></div>`,
+                script: "では早速、第1章です。まずは「デプロイ」という言葉そのものの意味から見ていきましょう。"
+            },
+            // Slide 4
+            {
+                content: `
+                    <div class="w-full max-w-5xl text-slate-800">
+                        <div class="text-center mb-12">
+                            <p class="mt-4 text-xl md:text-2xl font-bold text-teal-600">
+                                結論：デプロイとは「開発したアプリケーションを、<br class="sm:hidden"/>ユーザーがいつでも使える状態にすること」です。
+                            </p>
+                        </div>
+
+                        <div class="bg-white p-6 md:p-8 rounded-2xl shadow-2xl border border-stone-200 overflow-hidden">
+                            <!-- Interactive Diagram -->
+                            <div class="grid grid-cols-1 md:grid-cols-3 items-start gap-4 md:gap-6 relative">
+                                <!-- Local Environment -->
+                                <div class="text-center p-4 bg-slate-100 rounded-lg h-full">
+                                    <div class="text-5xl">💻</div>
+                                    <h3 class="font-bold mt-2">あなたのPC (ローカル環境)</h3>
+                                    <p class="text-sm text-slate-500 mt-1">開発者がコードを書く場所</p>
+                                    <div class="mt-4 flex items-center justify-center gap-2">
+                                        <div class="status-dot w-3 h-3 bg-green-500 rounded-full"></div>
+                                        <span class="text-sm font-medium">アプリ動作中</span>
+                                    </div>
+                                    <div class="mt-4 pt-4 border-t border-slate-200">
+                                        <span class="text-3xl" title="あなた">👤</span>
+                                        <p class="text-xs text-slate-500 mt-1">アクセスできるのは自分だけ</p>
+                                    </div>
+                                </div>
+
+                                <!-- Arrow & Button -->
+                                <div class="text-center py-4 md:py-20">
+                                    <div class="relative h-20 md:h-auto">
+                                        <div class="hidden md:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full">
+                                            <div class="w-full h-1 bg-slate-300"></div>
+                                            <div id="arrow-progress" class="absolute top-0 left-0 h-1 bg-teal-500 transition-all duration-1000" style="width: 0%;"></div>
+                                            <div class="absolute top-1/2 right-0 -translate-y-1/2 translate-x-1/2 text-2xl text-slate-400">▶</div>
+                                        </div>
+                                        <div class="md:hidden text-4xl text-slate-400 text-center my-2">▼</div>
+                                        <button id="deploy-button" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-6 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 whitespace-nowrap">
+                                            デプロイ実行！
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Production Environment -->
+                                <div class="text-center p-4 bg-slate-100 rounded-lg h-full">
+                                    <div class="text-5xl">☁️</div>
+                                    <h3 class="font-bold mt-2">サーバー (本番環境)</h3>
+                                    <p class="text-sm text-slate-500 mt-1">インターネット上でアプリを動かす場所</p>
+                                    <div class="mt-4 flex items-center justify-center gap-2">
+                                        <div id="server-status" class="status-dot w-3 h-3 bg-red-500 rounded-full"></div>
+                                        <span id="server-status-text" class="text-sm font-medium">ユーザーはまだ使えない</span>
+                                    </div>
+                                    <div id="server-users" class="user-icons mt-4 pt-4 border-t border-slate-200 opacity-0">
+                                        <div class="flex justify-center items-center gap-2 text-3xl">
+                                            <span title="ユーザー">👤</span>
+                                            <span title="ユーザー">👤</span>
+                                            <span title="ユーザー">👤</span>
+                                        </div>
+                                        <p class="text-xs text-slate-500 mt-1">色んな人からアクセス可能に</p>
+                                    </div>
+                                </div>
+
+                                <!-- App Packet for Animation -->
+                                <div id="app-packet" class="app-packet absolute top-1/2 left-1/4 -translate-x-1/2 -translate-y-1/2 text-4xl">📦</div>
+                            </div>
+
+                            <!-- Explanation Text -->
+                            <div class="mt-8 pt-6 border-t border-stone-200">
+                                <p id="explanation-text" class="text-center text-slate-600 h-16 flex items-center justify-center transition-opacity duration-500">
+                                    下の「デプロイ実行！」ボタンを押して、何が起こるか見てみましょう。
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="mt-12 text-center fade-in-text" id="final-analogy">
+                            <h3 class="text-xl font-bold text-slate-700">つまり、こういうこと</h3>
+                            <p class="mt-4 max-w-2xl mx-auto text-lg text-slate-600">
+                                自分のPCの中だけで動いていたアプリを、世界中の人が使えるように、いわば<span class="font-bold text-teal-600">「お店をオープンする」</span>ようなイメージです。
+                                デプロイは、開発者の手元にある素晴らしいアイデアや便利なツールを、必要としているユーザーの元へ届けるための、非常に重要でワクワクするプロセスなのです。
+                            </p>
+                        </div>
+                    </div>
+                `,
+                script: "「デプロイ実行！」ボタンを押して、ローカル環境から本番環境へアプリケーションが展開される様子を体験してみましょう。自分のPCでしか使えなかったアプリが、世界中のユーザーに公開されるまでの流れを視覚的に理解できます。"
+            },
+            // Slide 5
+            {
+                content: `
+                    <div class="w-full max-w-6xl mx-auto text-center slide-content">
+                         <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-8">サーバーの置き場所も時代と共に変化しています。</h2>
+                         <div class="flex flex-col md:flex-row items-stretch justify-around gap-8">
+                            <!-- On-premise -->
+                            <div class="w-full md:w-2/5 p-6 bg-white rounded-xl shadow-lg border border-gray-200">
+                                <h3 class="text-xl font-bold text-gray-600">過去</h3>
+                                <h4 class="text-2xl font-bold text-gray-800 mb-4">自社サーバー (オンプレミス)</h4>
+                                <svg class="w-40 h-40 mx-auto text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="2" width="18" height="8" rx="1"></rect><rect x="3" y="14" width="18" height="8" rx="1"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
+                            </div>
+                            <!-- Cloud -->
+                            <div class="w-full md:w-2/5 p-6 bg-white rounded-xl shadow-lg border-2 border-blue-400">
+                                <h3 class="text-xl font-bold text-blue-600">現在</h3>
+                                <h4 class="text-2xl font-bold text-gray-800 mb-4">クラウドサービス</h4>
+                                <svg class="w-40 h-40 mx-auto text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"></path><path d="M12 12v9"></path><path d="m16 16-4-4-4 4"></path></svg>
+                            </div>
+                         </div>
+                    </div>`,
+                script: "ここで使われている「サーバー」とは、「アプリケーションを動かすためのコンピューター」のことです。かつては、多くの企業が自社内にサーバー室を設け、物理的なコンピューターを設置・管理していました。しかし、クラウドサービスが普及した現在では、そういった物理サーバーを持たずに、クラウド上のサーバーをレンタルして運用することが一般的です。"
+            },
+            // Slide 6
+            {
+                content: `
+                    <div class="w-full max-w-6xl mx-auto text-center slide-content">
+                        <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">「PaaS」の登場</h2>
+                        <p class="text-lg text-gray-600 mb-8">アプリケーションを動かすための<span class="font-bold">土台</span>を丸ごと提供してくれるサービス</p>
+                        <div class="flex flex-col md:flex-row items-center justify-around gap-4 p-6 bg-white rounded-2xl shadow-xl border">
+                            <!-- Developer -->
+                            <div class="text-center">
+                                <p class="text-5xl">😄</p>
+                                <p class="font-bold text-lg">開発者</p>
+                                <p class="mt-4 font-semibold">Webアプリの<br/>プログラム</p>
+                                <svg class="w-20 h-20 text-indigo-500 mx-auto mt-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                            </div>
+                            <svg class="w-16 h-16 text-gray-400 my-4 md:my-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                            <!-- PaaS -->
+                            <div class="text-center p-6 border-4 border-dashed border-blue-400 rounded-2xl bg-blue-50">
+                                <p class="font-bold text-2xl text-blue-600">PaaS</p>
+                                <p class="font-bold text-xl text-blue-800 my-4">Render</p>
+                                <p class="text-gray-600">面倒なサーバー管理や<br/>設定をすべて自動化！</p>
+                            </div>
+                            <svg class="w-16 h-16 text-gray-400 my-4 md:my-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                            <!-- Published App -->
+                            <div class="text-center">
+                                <p class="font-bold text-lg">公開されたアプリ</p>
+                                <svg class="w-24 h-24 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 12 2 2 4-4"></path></svg>
+                            </div>
+                        </div>
+                    </div>`,
+                script: "とはいえ、レンタルしたサーバーの管理には専門知識と手間がかかります。そこで登場したのが、PaaS（Platform as a Service）です。PaaSを利用することで、開発者はサーバーの管理に煩わされることなく、本来の目的であるアプリケーション開発に集中できるようになります。"
+            },
+            // Slide 7
+            {
+                content: `<div class="text-center slide-content"><h1 class="text-4xl md:text-5xl font-bold text-gray-700">第2章：<br class="md:hidden"/>アプリの構成を見てみよう</h1></div>`,
+                script: "次に、私たちが作るアプリケーションが、どのような要素で構成されているかを見ていきましょう。"
+            },
+            // Slide 8
+            {
+                content: `
+                    <div class="w-full max-w-6xl mx-auto text-center slide-content">
+                        <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-8">シンプルなアプリも、複数のサーバーが連携して動いている！</h2>
+                        <div class="flex flex-col md:flex-row items-center justify-around gap-6">
+                            <!-- User -->
+                            <div class="text-center">
+                                <p class="text-5xl">👤</p>
+                                <h3 class="text-xl font-bold mt-2">ユーザー</h3>
+                                <p class="text-sm text-gray-600">アプリにアクセスする人</p>
+                            </div>
+
+                            <div class="text-center font-mono text-gray-500">
+                                <p class="text-sm">Request →</p>
+                                <svg class="w-12 h-12 text-gray-400 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                                <p class="text-sm">← Response</p>
+                            </div>
+
+                            <!-- Servers -->
+                            <div class="flex items-center gap-4 p-4 border-2 border-dashed rounded-lg">
+                                <!-- App Server -->
+                                <div class="p-4 bg-white rounded-xl shadow-md text-center">
+                                    <svg class="w-20 h-20 mx-auto text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                                    <h3 class="text-lg font-bold text-indigo-800 mt-2">Appサーバー</h3>
+                                    <p class="text-xs text-gray-600">Webページを作る</p>
+                                </div>
+
+                                <svg class="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+
+                                <!-- DB Server -->
+                                <div class="p-4 bg-white rounded-xl shadow-md text-center">
+                                    <svg class="w-20 h-20 mx-auto text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7a8 8 0 0116 0M12 11v10"></path></svg>
+                                    <h3 class="text-lg font-bold text-teal-800 mt-2">DBサーバー</h3>
+                                    <p class="text-xs text-gray-600">データを保管・管理</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`,
+                script: "私たちが普段何気なく使っているWebサービスは、実は1つのプログラムだけで動いているわけではありません。例えば、シンプルなブログアプリ（Ruby on Rails製）も、裏側では最低でも2つの役割を持つサーバーが協力し合って動いています。ユーザーからのリクエストを処理する「頭脳」担当のアプリケーションサーバーと、投稿データなどを保管する「データ倉庫」担当のデータベースサーバーです。"
+            },
+            // Slide 9
+            {
+                content: `<div class="text-center slide-content"><h1 class="text-4xl md:text-5xl font-bold text-gray-700">第3章：<br class="md:hidden"/>アプリ開発の「ローカル環境」とは？</h1></div>`,
+                script: "では、こうしたアプリケーションを開発する「場所」について見ていきましょう。第3章はローカル環境についてです。"
+            },
+            // Slide 10
+            {
+                content: `
+                    <div class="w-full max-w-4xl mx-auto text-center slide-content">
+                        <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4">開発・テストは、自分のPCで。</h2>
+                        <p class="text-xl text-gray-700 mb-6">この「自分のPC上の開発空間」を<span class="font-bold text-blue-600">ローカル環境</span>と呼びます。</p>
+                        <div class="relative p-6 bg-white rounded-xl shadow-lg inline-block">
+                             <div class="flex items-center gap-4">
+                                <p class="text-6xl">👨‍💻</p>
+                                <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                                <svg class="w-48 h-48 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                            </div>
+                            <div class="absolute top-4 right-4 bg-gray-100 rounded-lg p-3 shadow-sm">
+                                <p class="font-bold">思考中...</p>
+                                <p class="text-sm">🐛 バグ修正</p>
+                                <p class="text-sm">✨ 機能追加</p>
+                            </div>
+                        </div>
+                        <p class="mt-6 bg-yellow-100 text-yellow-800 p-3 rounded-lg max-w-2xl mx-auto">
+                           <span class="font-bold">「自分だけがアプリにアクセスできる」</span>状態です。<br/>
+                           <span class="text-sm">（正確には、「自分のPCのみ、自分のPC上で動いているアプリケーションにアクセスできる」）</span>
+                        </p>
+                    </div>`,
+                script: "さて、いきなり本番のサーバーにデプロイするわけではありません。まずは自分のPC上でアプリケーションを開発し、テストを繰り返します。この「自分のPC上の開発空間」のことをローカル環境（または開発環境）と呼びます。このローカル環境を作る方法にも、いくつかやり方があります。まずは、昔ながらのオーソドックスな方法を見てみましょう。"
+            },
+            // Slide 11
+            {
+                content: `
+                    <div class="w-full max-w-4xl mx-auto text-center slide-content">
+                        <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-8">昔ながらの方法：<br class="sm:hidden"/><span class="text-blue-600">PCに直接ツールをインストールする</span></h2>
+                        <div class="relative p-8 bg-white rounded-xl shadow-lg w-full max-w-md mx-auto">
+                            <p class="font-bold text-xl mb-4">My PC (macOS / Windows)</p>
+                            <div class="w-full h-40 bg-gray-200 rounded-lg flex items-center justify-center relative overflow-hidden">
+                                <p class="font-mono text-gray-400">Operating System</p>
+                                <div class="absolute top-4 left-4 p-2 bg-red-100 rounded-md text-sm font-bold animate-pulse">Ruby 2.7</div>
+                                <div class="absolute top-16 right-8 p-2 bg-blue-100 rounded-md text-sm font-bold animate-pulse">Rails 6</div>
+                                <div class="absolute bottom-4 left-16 p-2 bg-green-100 rounded-md text-sm font-bold animate-pulse">Postgres</div>
+                                <div class="absolute top-8 left-28 p-2 bg-yellow-100 rounded-md text-sm font-bold animate-pulse">Node.js</div>
+                            </div>
+                            <p class="mt-4 text-gray-600">必要なソフトをPCに直接<br/>どんどん追加していくイメージ</p>
+                        </div>
+                    </div>`,
+                script: "これは、アプリケーションを動かすのに必要なツール（プログラミング言語であるRuby、フレームワークのRails、データベースのPostgreSQLなど）を、すべて自分のPCに一つひとつインストールしていく方法です。"
+            },
+            // Slide 12
+            {
+                content: `
+                    <div class="w-full max-w-5xl mx-auto text-center slide-content">
+                        <h2 class="text-2xl md:text-3xl font-bold text-red-600 mb-2">直接インストール方式の「落とし穴」①</h2>
+                        <p class="text-3xl md:text-4xl font-bold text-gray-800 mb-8">環境の違いで動かない！</p>
+                        <div class="flex items-start justify-around gap-4">
+                            <!-- Dev A -->
+                            <div class="text-center">
+                                <p class="text-6xl">😄</p>
+                                <p class="font-bold mb-2">Aさん</p>
+                                <div class="p-4 bg-white rounded-xl shadow-md w-48 h-32 flex items-center justify-center border-4 border-green-400">
+                                    <svg class="w-20 h-20 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                </div>
+                            </div>
+                            <!-- Q marks -->
+                            <div class="text-center font-bold text-gray-600 text-lg px-4 pt-16">
+                                <div class="p-2 bg-gray-200 rounded-lg mb-2">OSが違うから?</div>
+                                <div class="p-2 bg-gray-200 rounded-lg">Verが違うから?</div>
+                            </div>
+                            <!-- Dev B -->
+                            <div class="text-center">
+                                <p class="text-6xl">😥</p>
+                                <p class="font-bold mb-2">Bさん</p>
+                                <div class="p-4 bg-white rounded-xl shadow-md w-48 h-32 flex items-center justify-center border-4 border-red-400">
+                                    <svg class="w-20 h-20 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`,
+                script: "一見シンプルに見えるこの「直接インストール方式」ですが、実は多くの開発者を悩ませる「落とし穴」があります。一つ目は、環境の違いで動かなくなる問題です。チームで開発していると、「AさんのPCでは動くのに、BさんのPCでは原因不明のエラーが出る…」という事態が頻繁に起こります。これは、PCのOSの違いや、インストールされているツールのバージョンが微妙に違うこと（環境差異）が原因です。"
+            },
+            // Slide 13 (Updated)
+            {
+                content: `
+                    <div class="w-full max-w-5xl mx-auto text-center slide-content">
+                        <h2 class="text-2xl md:text-3xl font-bold text-red-600 mb-2">直接インストール方式の「落とし穴」②</h2>
+                        <p class="text-3xl md:text-4xl font-bold text-gray-800 mb-8">PCがごちゃごちゃになる</p>
+                        <div class="p-6 bg-white rounded-xl shadow-lg">
+                           <div class="flex items-center justify-around gap-4">
+                                <!-- Step 1: Working on Project B -->
+                                <div class="text-center w-1/2">
+                                     <p class="text-sm font-bold">1. Project Bを開発中</p>
+                                     <p class="text-4xl my-2">👨‍💻</p>
+                                     <div class="p-2 bg-green-100 rounded-md">Project B (Ruby 3.0) ✅</div>
+                                </div>
+                                <!-- Step 2: Go back to Project A -->
+                                <div class="text-center w-1/2">
+                                     <p class="text-sm font-bold">2. Project Aに戻ると...</p>
+                                     <p class="text-4xl my-2">🤔</p>
+                                     <div class="p-2 bg-red-100 rounded-md">Project A (Ruby 2.7) ❌</div>
+                                </div>
+                           </div>
+                           <p class="mt-6 font-bold text-red-700 bg-red-50 p-3 rounded-lg">「あれ、昨日まで動いてたアプリAが動かない…なぜ！？」</p>
+                        </div>
+                    </div>`,
+                script: "二つ目は、PCがごちゃごちゃになる問題です。新しいプロジェクトを始めるたびに、新しいツールや違うバージョンのツールをPCにインストールしていくと、PCの中はどんどんカオスな状態になります。「プロジェクトAではRuby 2.7、プロジェクトBではRuby 3.0が必要…」といったバージョン管理は非常に面倒です。"
+            },
+            // Slide 14 (Updated)
+            {
+                content: `
+                    <div class="w-full max-w-5xl mx-auto text-center slide-content">
+                        <h2 class="text-2xl md:text-3xl font-bold text-red-600 mb-2">直接インストール方式の「落とし穴」③</h2>
+                        <p class="text-3xl md:text-4xl font-bold text-gray-800 mb-8">本番環境とのギャップ</p>
+                        <div class="flex flex-col md:flex-row items-center justify-around gap-4 p-6 bg-gray-100 rounded-xl">
+                            <!-- Local PC -->
+                            <div class="text-center">
+                                <p class="font-bold text-lg mb-2">開発PC</p>
+                                <div class="w-40 h-32 p-4 bg-white rounded-xl shadow-md flex flex-col items-center justify-center">
+                                     <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/MacOS_logo_%282017%29.svg/150px-MacOS_logo_%282017%29.svg.png" onerror="this.onerror=null;this.src='https://placehold.co/100x40/ccc/000?text=macOS';this.style.width='100px';this.style.height='40px';" alt="macOS Logo" class="h-10 mb-2"/>
+                                     <p class="text-green-500 font-bold">✅ 完璧に動作！</p>
+                                </div>
+                            </div>
+                            <!-- Arrow -->
+                            <div class="text-center">
+                                <p class="font-bold">デプロイ</p>
+                                <svg class="w-20 h-20 text-blue-500 my-2 md:my-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                            </div>
+                            <!-- Production Server -->
+                            <div class="text-center">
+                                <p class="font-bold text-lg mb-2">本番サーバー</p>
+                                <div class="w-40 h-32 p-4 bg-red-100 rounded-xl shadow-inner flex flex-col items-center justify-center">
+                                     <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Tux.svg/125px-Tux.svg.png" onerror="this.onerror=null;this.src='https://placehold.co/80x100/ccc/000?text=Linux';this.style.width='80px';this.style.height='100px';" alt="Linux Logo" class="h-16 mb-2"/>
+                                     <p class="font-bold text-red-600 text-lg animate-ping">ERROR</p>
+                                </div>
+                            </div>
+                        </div>
+                         <p class="text-5xl mt-4">🤯</p>
+                    </div>`,
+                script: "そして、一番の問題はこれです。自分のPC（macOS）で完璧に動くことを確認したのに、本番サーバー（多くはLinux）にデプロイした瞬間にエラーで動かなくなる、という悲劇です。これもOSやツールのバージョンの違いが引き起こします。"
+            },
+            // Slide 15 (Updated)
+            {
+                content: `
+                    <div class="w-full h-full flex flex-col items-center justify-center text-center bg-blue-600 rounded-2xl p-16 slide-content">
+                        <p class="text-3xl font-bold text-white">そこで登場！</p>
+                        <div class="flex items-center my-8">
+                              <img src="https://www.docker.com/wp-content/uploads/2022/03/Moby-logo.png" class="w-32 h-auto" onerror="this.onerror=null;this.src='https://placehold.co/128x128/ffffff/000000?text=Docker'" alt="Docker logo">
+                              <p class="text-8xl font-bold text-white ml-8">Docker</p>
+                        </div>
+                    </div>`,
+                script: "これまでの問題を一気に解決してくれる現代の必須ツールが「Docker」です。"
+            },
+            // Slide 16
+            {
+                content: `
+                    <div class="w-full max-w-4xl mx-auto text-center slide-content">
+                        <p class="text-xl md:text-2xl text-gray-800 mb-8">Dockerとは、「アプリケーションを動かすのに必要な環境を、<br/>まるごと詰め込める<span class="text-blue-600 font-bold">魔法の箱（＝コンテナ）</span>を作るためのツール」です。</p>
+                        <div class="w-64 h-64 mx-auto p-6 bg-blue-100 border-4 border-blue-400 border-dashed rounded-2xl relative shadow-xl">
+                            <p class="absolute top-2 right-4 text-3xl">📦</p>
+                            <h3 class="font-bold text-xl text-blue-800 mb-4">コンテナ</h3>
+                            <div class="space-y-3">
+                                <div class="bg-blue-200 p-2 rounded-md font-semibold">アプリ本体</div>
+                                <div class="bg-blue-200 p-2 rounded-md font-semibold">ライブラリ</div>
+                                <div class="bg-blue-200 p-2 rounded-md font-semibold">OS</div>
+                            </div>
+                        </div>
+                    </div>`,
+                script: "Dockerをひとことで説明するなら、このようになります。アプリケーションとその実行環境をセットで「箱詰め」にしてしまうイメージです。"
+            },
+            // Slide 17 (Updated)
+            {
+                content: `
+                    <div class="w-full max-w-5xl mx-auto text-center slide-content">
+                        <h2 class="text-2xl md:text-3xl font-bold text-green-700 mb-2">メリット①</h2>
+                        <p class="text-3xl md:text-4xl font-bold text-gray-800 mb-8">誰でも全く同じ環境を再現できる</p>
+                        <div class="flex flex-col md:flex-row items-center justify-center gap-4">
+                            <div class="text-center">
+                                <p class="font-bold mb-2">設計図</p>
+                                <svg class="w-24 h-24 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                <p class="font-semibold">Dockerfile</p>
+                            </div>
+                            <svg class="w-16 h-16 text-gray-400 mx-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                            <div class="flex gap-4">
+                               <div class="text-center">
+                                   <p class="text-4xl mb-2">😄</p><p class="font-bold">Aさん</p>
+                                   <div class="w-24 h-24 p-2 mt-2 bg-blue-100 border-2 border-blue-300 rounded-lg flex items-center justify-center font-bold">コンテナ ✅</div>
+                               </div>
+                               <div class="text-center">
+                                   <p class="text-4xl mb-2">😄</p><p class="font-bold">Bさん</p>
+                                   <div class="w-24 h-24 p-2 mt-2 bg-blue-100 border-2 border-blue-300 rounded-lg flex items-center justify-center font-bold">コンテナ ✅</div>
+                               </div>
+                            </div>
+                        </div>
+                    </div>`,
+                script: "この「コンテナ」という箱を使えば、こんないいことがあります。まず1つ目。コンテナの「設計図（Dockerfile）」さえ共有すれば、誰でも全く同じ環境の箱を数分で作れます。これにより、「AさんのPCでは動くのに、BさんのPCでは動かない」といった環境差異の問題が解決されます。"
+            },
+            // Slide 18 (Updated)
+            {
+                content: `
+                    <div class="w-full max-w-5xl mx-auto text-center slide-content">
+                        <h2 class="text-2xl md:text-3xl font-bold text-green-700 mb-2">メリット②</h2>
+                        <p class="text-3xl md:text-4xl font-bold text-gray-800 mb-8">PC本体はいつもクリーン</p>
+                        <div class="p-6 md:p-8 bg-white rounded-2xl shadow-2xl border border-gray-200 max-w-3xl mx-auto">
+                            <div class="flex items-center justify-center mb-4">
+                                <svg class="w-8 h-8 text-gray-700 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                                <h3 class="font-bold text-xl text-gray-800">My PC (macOS / Windows)</h3>
+                            </div>
+
+                            <div class="p-6 bg-slate-100 rounded-xl border-4 border-dashed border-blue-400 relative">
+                                <div class="absolute -top-4 left-1/2 -translate-x-1/2 flex items-center bg-slate-100 px-3 py-1 rounded-full">
+                                    <img src="https://www.docker.com/wp-content/uploads/2022/03/Moby-logo.png" onerror="this.onerror=null;this.src='https://placehold.co/32x25/1D63ED/FFFFFF?text=D'" alt="Docker Logo" class="w-8 h-auto mr-2">
+                                    <p class="font-bold text-blue-600 text-sm md:text-base whitespace-nowrap">Dockerが管理する領域</p>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-4 mt-6">
+                                    <div class="p-3 bg-blue-100 rounded-lg shadow-inner text-center border border-blue-200">
+                                        <p class="font-bold text-sm md:text-base">プロジェクトAの環境</p>
+                                        <p class="text-xs font-mono text-blue-800 mt-1">Ruby 2.7, Rails 6</p>
+                                    </div>
+                                    <div class="p-3 bg-green-100 rounded-lg shadow-inner text-center border border-green-200">
+                                         <p class="font-bold text-sm md:text-base">プロジェクトBの環境</p>
+                                         <p class="text-xs font-mono text-green-800 mt-1">Ruby 3.0, Rails 7</p>
+                                    </div>
+                                    <div class="p-3 bg-yellow-100 rounded-lg shadow-inner text-center border border-yellow-200">
+                                         <p class="font-bold text-sm md:text-base">プロジェクトCの環境</p>
+                                         <p class="text-xs font-mono text-yellow-800 mt-1">Python, Django</p>
+                                    </div>
+                                    <div class="p-3 bg-red-100 rounded-lg shadow-inner text-center flex flex-col items-center justify-center border border-red-200 opacity-80">
+                                         <p class="font-bold text-red-700 text-sm md:text-base">不要になった環境</p>
+                                         <p class="text-2xl mt-1">🗑️</p>
+                                         <p class="text-xs font-mono text-red-800">削除も簡単</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="mt-6 text-gray-700 max-w-3xl mx-auto">
+                            プロジェクトに必要なツールは、PC本体ではなく、各コンテナの中に閉じ込められます。<br/>
+                            これにより、PCを汚さずにプロジェクトごとに独立した環境を安全に管理できます。
+                        </p>
+                    </div>`,
+                script: "メリットの2つ目です。この図のように、PCの中にDockerが管理する専用の領域が作られます。プロジェクトA、プロジェクトBといった各開発環境は、その領域の中に「コンテナ」として、それぞれ完全に隔離された状態で存在します。ツールはPC本体ではなくコンテナの中にインストールされるため、PCがごちゃごちゃになることはありません。プロジェクトが終われば、そのコンテナを削除するだけで、跡形もなく消すことができます。"
+            },
+            // Slide 19 (Updated)
+            {
+                content: `
+                    <div class="w-full max-w-6xl mx-auto text-center slide-content">
+                        <h2 class="text-2xl md:text-3xl font-bold text-green-700 mb-2">メリット③</h2>
+                        <p class="text-3xl md:text-4xl font-bold text-gray-800 mb-8">本番環境にもそのまま持っていける</p>
+                        <div class="flex items-center justify-around gap-4 bg-gray-200 p-8 rounded-xl shadow-inner">
+                            <!-- Local -->
+                            <div class="text-center">
+                                <p class="font-bold">ローカル環境</p>
+                                <p class="text-5xl my-2">💻</p>
+                                <div class="w-32 h-32 p-2 bg-blue-100 border-2 border-blue-300 rounded-lg flex items-center justify-center font-bold">コンテナ 📦</div>
+                            </div>
+                            <!-- Conveyor -->
+                            <div class="text-center">
+                                <p>デプロイ</p>
+                                <div class="flex-grow h-8 my-2 bg-gray-500 rounded-full overflow-hidden relative min-w-[100px] conveyor-belt" style="background: repeating-linear-gradient(45deg, #6b7280, #6b7280 10px, #4b5563 10px, #4b5563 20px);"></div>
+                            </div>
+                            <!-- Production -->
+                            <div class="text-center">
+                                <p class="font-bold">本番環境</p>
+                                <p class="text-5xl my-2">☁️</p>
+                                <div class="w-32 h-32 p-2 bg-blue-100 border-2 border-blue-300 rounded-lg flex items-center justify-center font-bold">コンテナ 📦</div>
+                            </div>
+                        </div>
+                    </div>`,
+                script: "そして3つ目のメリットです。開発で使った「箱」を、そのまま本番サーバーに持っていくことができます。ローカル環境と本番環境のギャップが最小限になり、「ローカルでは動いたのに本番では動かない」という悲劇が起こる可能性が格段に下がります。"
+            },
+            // Slide 20 (Updated)
+            {
+                content: `
+                    <div class="w-full max-w-5xl mx-auto text-center slide-content">
+                        <h1 class="text-4xl md:text-5xl font-bold text-gray-700 mb-8">第6章：なぜデプロイで詰まる？<br/>ローカルと本番の3つの「壁」</h1>
+                        <div class="relative h-64 flex justify-center items-end">
+                            <p class="text-6xl z-10">👨‍💻</p>
+                            <div class="absolute bottom-0 flex items-end gap-2">
+                                <div class="h-32 w-24 bg-red-800/70 rounded-t-lg flex items-center justify-center text-white font-bold p-2">DB設定</div>
+                                <div class="h-48 w-24 bg-yellow-800/70 rounded-t-lg flex items-center justify-center text-white font-bold p-2">機密情報</div>
+                                <div class="h-40 w-24 bg-blue-800/70 rounded-t-lg flex items-center justify-center text-white font-bold p-2">ネットワーク</div>
+                            </div>
+                        </div>
+                    </div>`,
+                script: "「ローカルでは完璧に動いたのに、いざデプロイしたらエラーの嵐…」これは、Dockerを使っていても起こりうる、多くの開発者が経験する壁です。なぜ、このようなことが起きるのでしょうか？その原因は、たとえDockerを使っていても残ってしまう、ローカル環境と本番環境の「見えない違い」にあります。デプロイで立ちはだかる「3つの壁」を予め見ていきましょう。"
+            },
+            // Slide 21
+            {
+                content: `
+                    <div class="w-full max-w-6xl mx-auto text-center slide-content">
+                        <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-8">壁①：<span class="text-red-600">DB設定</span>の壁</h2>
+                        <div class="flex flex-col md:flex-row items-center justify-around gap-8">
+                            <div class="w-full md:w-2/5 p-6 bg-white rounded-xl shadow-md">
+                                <h3 class="font-bold text-xl mb-4">ローカル</h3>
+                                <div class="w-48 h-24 mx-auto p-2 border-2 border-gray-400 rounded-lg flex items-center justify-around">
+                                    <div class="text-sm font-bold">App</div>
+                                    <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                                    <div class="text-sm font-bold">DB</div>
+                                </div>
+                                <p class="mt-4 text-sm">自分のPC内で手軽に動かす</p>
+                            </div>
+                            <div class="w-full md:w-2/5 p-6 bg-red-50 rounded-xl shadow-md">
+                                <h3 class="font-bold text-xl mb-4">本番</h3>
+                                <div class="w-full h-24 mx-auto p-2 flex items-center justify-around">
+                                    <div class="text-sm font-bold p-2 border rounded">Appサーバー</div>
+                                    <svg class="w-10 h-10 text-red-500 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    <div class="text-sm font-bold p-2 border rounded">DBサーバー</div>
+                                </div>
+                                <p class="mt-4 text-sm text-red-700">専用の別サーバーに接続できずエラー</p>
+                            </div>
+                        </div>
+                    </div>`,
+                script: "1つ目の壁は、データベース設定の違いです。ローカルでは… 手軽さを重視し、DBサーバーも自分のPC内で動かします。`compose.yml`で`host: db`と書くだけで簡単に接続できました。本番では… 性能やセキュリティのため、Appサーバーとは別の専用サーバーでDBを動かします。ここで詰まる！ ローカルの接続設定のままデプロイしてしまい、本番DBに接続できずエラーになります。本番用のDBの正しい接続先を指定し直す必要があります。"
+            },
+            // Slide 22 (Updated)
+            {
+                content: `
+                    <div class="w-full max-w-6xl mx-auto text-center slide-content">
+                        <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-8">壁②：<span class="text-red-600">機密情報・環境変数</span>の壁</h2>
+                        <div class="flex flex-col md:flex-row items-center justify-around gap-8">
+                            <div class="w-full md:w-2/5 p-6 bg-white rounded-xl shadow-md">
+                                <h3 class="font-bold text-xl mb-4">ローカル</h3>
+                                <div class="w-64 h-24 mx-auto p-2 flex flex-col items-center justify-center">
+                                    <div class="flex gap-2">
+                                        <div class="p-2 border bg-gray-100 rounded">master.key</div>
+                                        <div class="p-2 border bg-gray-100 rounded">.env</div>
+                                    </div>
+                                    <p class="mt-2 text-xs text-gray-500">自分のPCにだけ保管しているファイル</p>
+                                </div>
+                            </div>
+                            <div class="w-full md:w-2/5 p-6 bg-yellow-50 rounded-xl shadow-md">
+                                <h3 class="font-bold text-xl mb-4">本番</h3>
+                                <div class="w-48 h-24 mx-auto p-2 flex items-center justify-center">
+                                    <svg class="w-16 h-16 text-yellow-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 8a6 6 0 01-7.743 5.743L10 14l-1 1-1 1H6v2H2v-4l4.257-4.257A6 6 0 1118 8zm-6-4a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd" /></svg>
+                                </div>
+                                <p class="mt-4 text-sm text-yellow-800">安全な「環境変数」<br/>(金庫のような場所) で管理</p>
+                            </div>
+                        </div>
+                    </div>`,
+                script: "2つ目の壁は、パスワードなどの機密情報の管理方法の違いです。ローカルでは… DBのパスワードや外部サービスのAPIキーといった機密情報を、便宜上、`config/master.key`や`.env`といったファイルで管理します。本番では… 絶対にやってはいけないこと、それは機密情報をファイルとしてサーバーに置くことです。コードが漏洩した際に、すべての機密情報が流出してしまいます。本番環境では、サーバーの機能（環境変数）を使って、コードとは分離された安全な場所で機密情報を管理します。ここで詰まる！ ローカルのファイルに頼ったコードのままデプロイすると、本番環境では機密情報を読み込めず、DB接続エラーやAPI認証エラーが発生します。"
+            },
+            // Slide 23 (Updated)
+            {
+                content: `
+                    <div class="w-full max-w-6xl mx-auto text-center slide-content">
+                        <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-8">壁③：<span class="text-red-600">ネットワーク</span>の壁</h2>
+                        <p class="text-xl text-gray-600 mb-6">本番サーバーは<span class="font-bold text-red-600">ファイアウォール</span>で守られており、許可された通信しかできません。</p>
+                        <div class="grid grid-cols-3 items-center gap-4 h-80">
+                            <!-- IN: Allowed -->
+                            <div class="text-center h-full flex flex-col justify-center">
+                                <p class="text-5xl">👤</p>
+                                <p class="font-bold mt-1">ユーザー</p>
+                                <div class="mt-4">
+                                    <p class="font-bold text-green-600">Web閲覧 (HTTPS)</p>
+                                    <svg class="w-24 h-24 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                                    <p class="font-bold text-green-600">許可</p>
+                                </div>
+                            </div>
+
+                            <!-- Middle: Server -->
+                            <div class="h-full bg-red-100 border-4 border-red-500 border-dashed rounded-2xl flex flex-col items-center justify-center p-4">
+                                <p class="font-black text-red-600 text-2xl">FIREWALL</p>
+                                <div class="my-4 bg-white p-4 rounded-lg shadow-lg text-center">
+                                    <p class="text-5xl">💻</p>
+                                    <p class="font-bold text-xl">本番サーバー</p>
+                                </div>
+                                <p class="text-sm text-red-700">許可された通信以外は<br/>ブロックする壁</p>
+                            </div>
+
+                            <!-- OUT: Blocked -->
+                            <div class="text-center h-full flex flex-col justify-center">
+                                <svg class="w-20 h-20 text-gray-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2h8a2 2 0 002-2v-1a2 2 0 012-2h1.945M7.905 11A9 9 0 0112 3c4.97 0 9 4.03 9 9s-4.03 9-9 9a9 9 0 01-4.095-1.124"></path></svg>
+                                <p class="font-bold mt-1">外部API</p>
+                                <div class="mt-4">
+                                    <p class="font-bold text-red-600">APIへの接続</p>
+                                    <div class="relative w-24 h-24 mx-auto flex items-center justify-center">
+                                        <!-- Arrow from server to here -->
+                                        <svg class="w-24 h-24 text-red-500 transform -scale-x-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                                        <p class="absolute text-6xl font-bold">🚫</p>
+                                    </div>
+                                    <p class="font-bold text-red-600">ブロック</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`,
+                script: "3つ目の壁は、ネットワーク、特にファイアウォールの存在です。- ローカルでは… 基本的にPC内の通信は自由です。ファイアウォールを意識することはほとんどありません。- 本番では… サーバーは不正アクセスを防ぐため、ファイアウォールという「防火壁」で厳重に守られています。Webページを見るための通信（HTTP/HTTPS）など、許可された通信以外はすべてブロックされます。- ここで詰まる！ アプリケーションが外部のAPIを利用しようとしたら、本番サーバーのファイアウォール設定で外部への通信が許可されておらず、接続タイムアウトエラーになることがあります。"
+            },
+            // Slide 24 (Updated)
+            {
+                content: `
+                    <div class="text-center slide-content">
+                        <h1 class="text-4xl md:text-5xl font-bold text-gray-700 mb-8">第7章：実践編<br/>Renderデプロイで「3つの壁」を乗り越える</h1>
+                        <div class="relative h-64 flex justify-center items-center">
+                             <p class="text-6xl font-bold text-blue-600 z-10">Render</p>
+                             <p class="text-6xl absolute z-0 animate-pulse">🧗</p>
+                        </div>
+                    </div>`,
+                script: "お疲れ様です！第6章まででデプロイの難しさの正体がわかりましたね。この章では、実際にPaaSである「Render」へデプロイする際に、ローカルのDocker環境と何が違い、なぜ「あの設定」が必要だったのかを一つずつ解き明かしていきます。"
+            },
+            // Slide 25
+            {
+                content: `
+                    <div class="w-full max-w-4xl mx-auto slide-content">
+                        <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-2 text-center">ポイント1：ビルドと起動の分離</h2>
+                        <p class="text-lg text-center text-gray-600 mb-8">→ <code class="bg-gray-200 px-2 py-1 rounded">render-build.sh</code> の役割</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div class="p-6 bg-white rounded-xl shadow-md">
+                                <h3 class="font-bold text-xl mb-2">ローカル (Docker)</h3>
+                                <p><code class="bg-gray-200 px-2 py-1 rounded">docker compose up</code> 一発で完了</p>
+                            </div>
+                            <div class="p-6 bg-blue-50 rounded-xl shadow-md border-2 border-blue-200">
+                                <h3 class="font-bold text-xl mb-2">Render</h3>
+                                <div class="space-y-2">
+                                    <div class="flex items-center"><svg class="w-6 h-6 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg> <b>Build Command:</b> 準備 (1回だけ)</div>
+                                    <div class="flex items-center"><svg class="w-6 h-6 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> <b>Start Command:</b> 起動 (ずっと)</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`,
+                script: "ローカル(Docker)では: `docker compose up`というコマンド一発で、環境構築からRailsサーバーの起動まで全部やってくれました。Renderでは: Renderは「ビルド（準備作業）」と「起動（サービス提供）」を明確に区別します。Build Command (`./bin/render-build.sh`): デプロイ時に一度だけ実行される「準備用の命令」です。`bundle install`や`db:migrate`といった、アプリを動かすための下準備をここで行います。Start Command (`bundle exec rails server`): ビルド完了後、Webサーバーを起動し続けるための命令です。ユーザーからのアクセスを待ち受けるのがこちらの役割です。なぜ必要？ この分離により、デプロイのたびに毎回必要な準備作業だけを効率的に行い、サービスをスムーズに更新できるのです。"
+            },
+            // Slide 26
+            {
+                content: `
+                    <div class="w-full max-w-4xl mx-auto slide-content">
+                        <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-2 text-center">ポイント2：データベースは別サービス</h2>
+                        <p class="text-lg text-center text-gray-600 mb-8">→ <code class="bg-gray-200 px-2 py-1 rounded">DATABASE_URL</code> の役割</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div class="p-6 bg-white rounded-xl shadow-md text-center">
+                                <h3 class="font-bold text-xl mb-2">ローカル (Docker)</h3>
+                                <p class="text-sm">Webサーバーの「隣」にDB</p>
+                                <div class="flex items-center justify-center gap-2 mt-2">
+                                   <div class="p-2 border rounded">Web</div>
+                                   <div class="p-2 border rounded">DB</div>
+                                </div>
+                            </div>
+                            <div class="p-6 bg-blue-50 rounded-xl shadow-md border-2 border-blue-200 text-center">
+                                <h3 class="font-bold text-xl mb-2">Render</h3>
+                                <p class="text-sm">完全に独立したDB専門サービス</p>
+                                <div class="flex items-center justify-around gap-2 mt-2">
+                                   <div class="p-2 border rounded">Web Service</div>
+                                   <div class="font-bold text-blue-600">DATABASE_URL</div>
+                                   <div class="p-2 border rounded">PostgreSQL</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`,
+                script: "ローカル(Docker)では: Webサーバーのコンテナの「隣」にDBコンテナがいました。Renderでは: Web Serviceとは完全に独立したPostgreSQLという「データベース専門サービス」を別途作成しました。これは「DB設定の壁」を乗り越えるための重要なステップです。なぜ必要？ ローカルのDBをそのまま本番で使うわけにはいきません。Renderが用意した、より安全で高性能な本番用DBに接続し直す必要があります。そのための「本番DBの住所録」が、環境変数`DATABASE_URL`です。Railsはこの環境変数を見つけると、`database.yml`の設定よりも優先して、正しい本番DBに接続しにいきます。"
+            },
+            // Slide 27
+            {
+                content: `
+                    <div class="w-full max-w-4xl mx-auto slide-content">
+                        <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-2 text-center">ポイント3：機密情報はコードに含まない</h2>
+                        <p class="text-lg text-center text-gray-600 mb-8">→ <code class="bg-gray-200 px-2 py-1 rounded">RAILS_MASTER_KEY</code> の役割</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div class="p-6 bg-white rounded-xl shadow-md text-center">
+                                <h3 class="font-bold text-xl mb-2">ローカル (Docker)</h3>
+                                <p class="mt-4"><code class="bg-gray-200 px-2 py-1 rounded">master.key</code> はファイルとして存在</p>
+                            </div>
+                            <div class="p-6 bg-blue-50 rounded-xl shadow-md border-2 border-blue-200 text-center">
+                                <h3 class="font-bold text-xl mb-2">Render</h3>
+                                <p class="mt-4">代わりに<span class="font-bold text-blue-600">環境変数</span>で鍵を渡す</p>
+                                <div class="mt-2 bg-gray-700 text-left p-2 rounded-lg text-white font-mono text-sm">
+                                    <span class="text-yellow-400">RAILS_MASTER_KEY</span>=<span class="text-green-400">...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`,
+                script: "ローカル(Docker)では: `config/master.key`はPC内にファイルとして存在していました。Renderでは: `.gitignore`により`master.key`はGitHubに存在しないため、Renderもこのファイルを知りません。なぜ必要？ そこで登場するのが環境変数`RAILS_MASTER_KEY`です。Renderのダッシュボード画面でこの値を設定することで、コードには含めずに、安全に鍵を本番サーバーにだけ渡すことができます。これにより「機密情報・環境変数の壁」を安全に乗り越えることができるのです。"
+            },
+            // Slide 28
+            {
+                content: `
+                    <div class="w-full max-w-4xl mx-auto slide-content text-center">
+                        <h2 class="text-4xl md:text-5xl font-bold text-gray-800 mb-8">まとめ：デプロイを制して、<br/>開発をもっと楽しく！</h2>
+                        <ul class="space-y-4 text-xl text-left list-disc list-inside bg-white p-6 rounded-lg shadow-lg">
+                            <li>デプロイとは、アプリを<span class="font-bold">世界に公開する</span>作業。</li>
+                            <li>ローカルと本番には「DB設定」「機密情報」「ネットワーク」という<span class="font-bold text-red-600">「壁」</span>がある。</li>
+                            <li><code class="bg-gray-200 text-sm p-1 rounded">render-build.sh</code>や環境変数は、この「壁」を<span class="font-bold text-blue-600">乗り越えるための重要な手続き</span>。</li>
+                        </ul>
+                         <p class="text-5xl mt-8">🎉</p>
+                    </div>`,
+                script: "ここまでお疲れ様でした！最後に、今回の内容を振り返ってみましょう。デプロイとは、開発したアプリケーションを世界に公開するための作業です。ローカル環境（自分のPC）と本番環境（サーバー）には、「DB設定」「機密情報の管理」「ネットワーク」など、いくつもの「違い（壁）」が存在します。`render-build.sh`や環境変数の設定は、これらの「壁」を乗り越え、ローカルと本番の違いを吸収するための非常に重要な手続きです。"
+            },
+            // Slide 29
+            {
+                content: `
+                    <div class="w-full max-w-4xl mx-auto slide-content text-center">
+                         <h2 class="text-3xl md:text-4xl font-bold text-blue-600 mb-8">自分の作ったサービスが、<br/>世界中の誰かに使われる感動を。</h2>
+                         <div class="relative">
+                            <svg class="w-full h-auto text-gray-300" viewBox="0 0 800 400">
+                                <!-- World map -->
+                                <path d="M400 0C179.086 0 0 100 0 200s179.086 200 400 200 400-100 400-200S620.914 0 400 0zm0 380C195.429 380 20 299.143 20 200S195.429 20 400 20s380 80.857 380 180-154.571 180-380 180z"/>
+                                <circle cx="400" cy="200" r="10" fill="red"/>
+                                <circle cx="200" cy="150" r="5" fill="blue"/>
+                                <circle cx="600" cy="250" r="5" fill="blue"/>
+                                <circle cx="100" cy="250" r="5" fill="blue"/>
+                                <circle cx="700" cy="150" r="5" fill="blue"/>
+                                <path d="M200,150 C300,100 300,300 400,200" stroke="blue" fill="none" stroke-dasharray="5,5"/>
+                                <path d="M600,250 C500,300 500,100 400,200" stroke="blue" fill="none" stroke-dasharray="5,5"/>
+                                <path d="M100,250 C250,300 250,100 400,200" stroke="blue" fill="none" stroke-dasharray="5,5"/>
+                                <path d="M700,150 C550,100 550,300 400,200" stroke="blue" fill="none" stroke-dasharray="5,5"/>
+                            </svg>
+                            <p class="text-6xl absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">👨‍💻✨</p>
+                         </div>
+                    </div>`,
+                script: "デプロイは、決して魔法ではありません。ローカルと本番の違いを正しく理解し、一つひとつの設定を丁寧に行うことで、誰でも乗り越えることができます。そして、自分の作ったサービスがインターネット上で動き出し、世界中の誰かがアクセスしてくれた時の感動は、何物にも代えがたいものです。このページで得た知識を元に、ぜひあなた自身のアプリケーションのデプロイに挑戦してみてください！"
+            },
+        ];
+
+        let currentSlide = 0;
+        const presentationContainer = document.getElementById('presentation-container');
+        const scriptText = document.getElementById('script-text');
+        const currentSlideNum = document.getElementById('current-slide-num');
+        const totalSlidesNum = document.getElementById('total-slides-num');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        let slide4Initialized = false;
+
+        function init() {
+            // Create slide elements
+            slidesData.forEach((slide, index) => {
+                const slideEl = document.createElement('div');
+                slideEl.id = `slide-${index}`;
+                slideEl.classList.add('slide', 'w-full', 'items-center', 'justify-center');
+                slideEl.innerHTML = slide.content;
+                presentationContainer.appendChild(slideEl);
+            });
+
+            totalSlidesNum.textContent = slidesData.length;
+            showSlide(currentSlide);
+
+            prevBtn.addEventListener('click', showPrevSlide);
+            nextBtn.addEventListener('click', showNextSlide);
+
+            // Keyboard navigation
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowRight') {
+                    showNextSlide();
+                } else if (e.key === 'ArrowLeft') {
+                    showPrevSlide();
+                }
+            });
+        }
+
+        function runSlide4Script() {
+            // Reset state if already initialized
+            if (document.getElementById('deploy-button')?.dataset.initialized) {
+                 const slide4Container = document.getElementById('slide-3');
+                 const originalContent = slidesData[3].content;
+                 slide4Container.innerHTML = originalContent;
+            }
+
+
+            const deployButton = document.getElementById('deploy-button');
+            if (!deployButton) return;
+            deployButton.dataset.initialized = true;
+
+            const explanationText = document.getElementById('explanation-text');
+            const arrowProgress = document.getElementById('arrow-progress');
+            const serverStatus = document.getElementById('server-status');
+            const serverStatusText = document.getElementById('server-status-text');
+            const serverUsers = document.getElementById('server-users');
+            const appPacket = document.getElementById('app-packet');
+            const finalAnalogy = document.getElementById('final-analogy');
+
+            let isDeploying = false;
+
+            const resetState = () => {
+                isDeploying = false;
+
+                deployButton.disabled = false;
+                deployButton.innerText = 'デプロイ実行！';
+                deployButton.classList.remove('bg-slate-400', 'cursor-not-allowed', 'bg-amber-500', 'hover:bg-amber-600');
+                deployButton.classList.add('bg-teal-600', 'hover:bg-teal-700');
+
+                if (arrowProgress) {
+                    arrowProgress.style.width = '0%';
+                }
+
+                appPacket.style.opacity = '0';
+                appPacket.style.transform = isMobile ? 'translate(0, 50%)' : 'translate(0, 0)';
+
+
+                serverStatus.classList.add('bg-red-500');
+                serverStatus.classList.remove('bg-green-500');
+                serverStatusText.innerText = 'ユーザーはまだ使えない';
+                serverUsers.style.opacity = '0';
+
+                finalAnalogy.style.opacity = '0';
+
+                explanationText.style.opacity = '1';
+                explanationText.innerText = '下の「デプロイ実行！」ボタンを押して、何が起こるか見てみましょう。';
+
+                deployButton.onclick = deploy;
+            };
+
+            const isMobile = window.innerWidth < 768;
+
+            const deploy = () => {
+                if (isDeploying) return;
+                isDeploying = true;
+
+                deployButton.disabled = true;
+                deployButton.innerText = 'デプロイ中...';
+                deployButton.classList.remove('hover:bg-teal-700');
+                deployButton.classList.add('bg-slate-400', 'cursor-not-allowed');
+
+                explanationText.style.opacity = '0';
+                setTimeout(() => {
+                    explanationText.innerText = '開発者のPCからアプリケーションをサーバーへ転送します...';
+                    explanationText.style.opacity = '1';
+                }, 500);
+
+                appPacket.style.opacity = '1';
+                if (isMobile) {
+                    appPacket.style.transform = 'translate(0, 450%) scale(1)';
+                } else {
+                    appPacket.style.transform = 'translate(250%, 0) scale(1)';
+                }
+
+                if(arrowProgress) {
+                    arrowProgress.style.width = '100%';
+                }
+
+                setTimeout(() => {
+                    explanationText.style.opacity = '0';
+                    setTimeout(() => {
+                        explanationText.innerText = 'サーバー側でアプリケーションを起動し、設定を適用します...';
+                        explanationText.style.opacity = '1';
+                    }, 500);
+                    appPacket.style.opacity = '0';
+                }, 2500);
+
+                setTimeout(() => {
+                    explanationText.style.opacity = '0';
+                    setTimeout(() => {
+                        explanationText.innerText = '完了！ユーザーがアプリケーションを使えるようになりました！';
+                        serverStatus.classList.remove('bg-red-500');
+                        serverStatus.classList.add('bg-green-500');
+                        serverStatusText.innerText = 'ユーザーが利用可能！';
+                        serverUsers.style.opacity = '1';
+                        finalAnalogy.style.opacity = '1';
+
+                        deployButton.innerText = 'リセット';
+                        deployButton.disabled = false;
+                        deployButton.classList.remove('bg-slate-400', 'cursor-not-allowed');
+                        deployButton.classList.add('bg-amber-500', 'hover:bg-amber-600');
+                        deployButton.onclick = resetState;
+                        isDeploying = false;
+                    }, 500);
+                }, 4500);
+            };
+
+            deployButton.onclick = deploy;
+        }
+
+        function showSlide(index) {
+            // Hide all slides
+            document.querySelectorAll('.slide').forEach(slide => {
+                slide.classList.remove('active');
+            });
+
+            // Show current slide
+            const slideToShow = document.getElementById(`slide-${index}`);
+            if (slideToShow) {
+                slideToShow.classList.add('active');
+            }
+
+            // If it's the interactive slide, run its script
+            if (index === 3) {
+                 runSlide4Script();
+            }
+
+            // Update script
+            scriptText.textContent = slidesData[index].script;
+
+            // Update slide number
+            currentSlideNum.textContent = index + 1;
+
+            // Update button states
+            prevBtn.disabled = index === 0;
+            nextBtn.disabled = index === slidesData.length - 1;
+        }
+
+        function showNextSlide() {
+            if (currentSlide < slidesData.length - 1) {
+                currentSlide++;
+                showSlide(currentSlide);
+            }
+        }
+
+        function showPrevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                showSlide(currentSlide);
+            }
+        }
+
+        // Initialize the presentation
+        init();
+
+    </script>
+</body>
+</html>
