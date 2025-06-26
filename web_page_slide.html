@@ -592,6 +592,49 @@
                     </div>`,
                 script: "そして3つ目のメリットです。開発で使った「箱」を、そのまま本番サーバーに持っていくことができます。ローカル環境と本番環境のギャップが最小限になり、「ローカルでは動いたのに本番では動かない」という悲劇が起こる可能性が格段に下がります。"
             },
+            // Slide 20 (New)
+            {
+                content: `
+                    <div class="w-full max-w-6xl mx-auto slide-content">
+                        <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-8 text-center">Dockerfile vs Docker Compose</h2>
+                        <p class="text-xl text-center text-gray-600 mb-12">家（コンテナ）で例えるなら<span class="font-bold text-blue-600">「設計図」</span>と<span class="font-bold text-green-600">「建築指示書」</span>の関係です。</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-start">
+                            <!-- Dockerfile -->
+                            <div class="p-6 bg-white rounded-2xl shadow-xl border-2 border-blue-300 h-full flex flex-col">
+                                <div class="text-center mb-4">
+                                    <svg class="w-20 h-20 text-blue-600 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                    <h3 class="text-2xl font-bold text-blue-800 mt-2">Dockerfile</h3>
+                                    <p class="font-semibold text-blue-600">コンテナ1つの「設計図」</p>
+                                </div>
+                                <ul class="space-y-3 list-disc list-inside text-gray-700 flex-grow">
+                                    <li>OSのバージョンを指定</li>
+                                    <li>必要なライブラリをインストール</li>
+                                    <li>アプリのコードをコピー</li>
+                                    <li>実行するコマンドを指定</li>
+                                </ul>
+                                <p class="mt-4 text-sm bg-blue-50 p-3 rounded-lg">→ <span class="font-bold">1つの箱（コンテナ）</span>の中身を決めるための指示書。</p>
+                            </div>
+
+                            <!-- Docker Compose -->
+                            <div class="p-6 bg-white rounded-2xl shadow-xl border-2 border-green-300 h-full flex flex-col">
+                                <div class="text-center mb-4">
+                                    <svg class="w-20 h-20 text-green-600 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                                    <h3 class="text-2xl font-bold text-green-800 mt-2">Docker Compose</h3>
+                                    <p class="font-semibold text-green-600">複数のコンテナを管理する「建築指示書」</p>
+                                </div>
+                                <ul class="space-y-3 list-disc list-inside text-gray-700 flex-grow">
+                                    <li>どの設計図(Dockerfile)でWebサーバーを建てるか</li>
+                                    <li>どのイメージでDBサーバーを建てるか</li>
+                                    <li>サーバー間のネットワークをどう繋ぐか</li>
+                                    <li>データをどこに保存するか (ボリューム)</li>
+                                </ul>
+                                <p class="mt-4 text-sm bg-green-50 p-3 rounded-lg">→ <span class="font-bold">複数の箱（コンテナ）</span>を連携させ、1つのアプリとして動かすための指示書。</p>
+                            </div>
+                        </div>
+                    </div>
+                `,
+                script: "Dockerを使いこなす上で重要なのが、このDockerfileとDocker Composeです。Dockerfileは、コンテナという「家」を1軒建てるための「設計図」です。どんな土台（OS）の上に、どんな設備（ライブラリ）を置き、どんな家具（アプリのコード）を配置するか、といった家の中身を定義します。一方、Docker Composeは、複数の家（コンテナ）をまとめて管理し、街全体（アプリケーション）を作るための「建築指示書」です。Webサーバーの家はAの設計図で、DBサーバーの家はBの設計図で建て、二つの家の間には道路（ネットワーク）を通す、といった全体構成を定義します。"
+            },
             // Slide 20 (Updated)
             {
                 content: `
