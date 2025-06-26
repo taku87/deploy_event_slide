@@ -810,27 +810,155 @@
             // Slide 29
             {
                 content: `
-                    <div class="w-full max-w-4xl mx-auto slide-content text-center">
-                         <h2 class="text-3xl md:text-4xl font-bold text-blue-600 mb-8">自分の作ったサービスが、<br/>世界中の誰かに使われる感動を。</h2>
-                         <div class="relative">
-                            <svg class="w-full h-auto text-gray-300" viewBox="0 0 800 400">
-                                <!-- World map -->
-                                <path d="M400 0C179.086 0 0 100 0 200s179.086 200 400 200 400-100 400-200S620.914 0 400 0zm0 380C195.429 380 20 299.143 20 200S195.429 20 400 20s380 80.857 380 180-154.571 180-380 180z"/>
-                                <circle cx="400" cy="200" r="10" fill="red"/>
-                                <circle cx="200" cy="150" r="5" fill="blue"/>
-                                <circle cx="600" cy="250" r="5" fill="blue"/>
-                                <circle cx="100" cy="250" r="5" fill="blue"/>
-                                <circle cx="700" cy="150" r="5" fill="blue"/>
-                                <path d="M200,150 C300,100 300,300 400,200" stroke="blue" fill="none" stroke-dasharray="5,5"/>
-                                <path d="M600,250 C500,300 500,100 400,200" stroke="blue" fill="none" stroke-dasharray="5,5"/>
-                                <path d="M100,250 C250,300 250,100 400,200" stroke="blue" fill="none" stroke-dasharray="5,5"/>
-                                <path d="M700,150 C550,100 550,300 400,200" stroke="blue" fill="none" stroke-dasharray="5,5"/>
-                            </svg>
-                            <p class="text-6xl absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">👨‍💻✨</p>
-                         </div>
+                    <style>
+                        .stage {
+                            position: relative;
+                            width: 100%;
+                            height: 300px;
+                            overflow: hidden;
+                        }
+                        .pc-area, .world-area {
+                            position: absolute;
+                            top: 50%;
+                            transform: translateY(-50%);
+                        }
+                        .pc-area { left: 10%; }
+                        .world-area { right: 10%; }
+
+                        .rocket, .package {
+                            position: absolute;
+                            font-size: 3.5rem; /* 56px */
+                            will-change: transform, opacity;
+                            transition: opacity 0.3s ease-in-out;
+                        }
+                        .package {
+                            top: 110px;
+                            left: calc(10% + 80px);
+                        }
+                        .rocket {
+                            top: 100px;
+                            left: calc(10% + 120px);
+                            transform: rotate(-30deg);
+                            opacity: 0;
+                        }
+                        .world-users .user {
+                            transition: all 0.3s ease-out;
+                        }
+
+                        /* --- Animation Keyframes & Classes --- */
+                        .animate .rocket {
+                            animation:
+                                fadeIn 0.5s ease-out 0.5s forwards,
+                                launch 3s cubic-bezier(0.4, 0, 0.8, 1) 1.5s forwards;
+                        }
+                        .animate .package {
+                            animation: loadPackage 1s ease-in-out 0.5s forwards;
+                        }
+                        .animate .world-users .user {
+                            animation: celebrate 0.5s ease-in-out 4.5s forwards;
+                        }
+
+                        @keyframes fadeIn {
+                            from { opacity: 0; }
+                            to { opacity: 1; }
+                        }
+                        @keyframes loadPackage {
+                            0% { transform: translate(0, 0) scale(1); opacity: 1; }
+                            100% { transform: translate(40px, -10px) scale(0); opacity: 0; }
+                        }
+                        @keyframes launch {
+                            0% {
+                                transform: translate(0, 0) rotate(-30deg);
+                            }
+                            20% {
+                                transform: translate(20px, -50px) rotate(0deg);
+                            }
+                            100% {
+                                transform: translate(500px, -80px) rotate(30deg);
+                                opacity: 0;
+                            }
+                        }
+                        @keyframes celebrate {
+                            from { transform: scale(1); color: initial; }
+                            to { transform: scale(1.3); color: #f59e0b; } /* amber-500 */
+                        }
+
+                        /* For smaller screens */
+                        @media (max-width: 768px) {
+                            @keyframes launch {
+                                100% {
+                                    transform: translate(250px, -60px) rotate(30deg);
+                                    opacity: 0;
+                                }
+                            }
+                            .package { left: calc(10% + 40px); }
+                            .rocket { left: calc(10% + 60px); }
+                        }
+                    </style>
+                    <div class="w-full max-w-5xl mx-auto slide-content text-center flex flex-col items-center justify-center">
+                        <h2 class="text-3xl md:text-4xl font-bold text-blue-600 mb-4">自分の作ったサービスが、<br/>世界中の誰かに使われる感動を。</h2>
+
+                        <div id="animation-stage" class="stage">
+                            <div class="pc-area text-center">
+                                <p class="text-7xl">💻</p>
+                                <p class="font-bold text-gray-600 mt-2">あなたのPC</p>
+                            </div>
+
+                            <div class="world-area text-center">
+                                <div class="relative">
+                                    <p class="text-8xl">🌍</p>
+                                    <div class="world-users absolute inset-0 flex items-center justify-center">
+                                        <span class="user absolute text-3xl" style="transform: translate(-40px, -40px) rotate(-30deg);">👤</span>
+                                        <span class="user absolute text-3xl" style="transform: translate(50px, -20px) rotate(20deg);">👤</span>
+                                        <span class="user absolute text-3xl" style="transform: translate(-20px, 50px) rotate(-10deg);">👤</span>
+                                    </div>
+                                </div>
+                                <p class="font-bold text-gray-600 mt-2">世界中のユーザー</p>
+                            </div>
+
+                            <div class="package">📦</div>
+                            <div class="rocket">🚀</div>
+                        </div>
+
+                        <button id="launch-btn" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-all text-lg">
+                            アプリをローンチ！
+                        </button>
                     </div>`,
-                script: "デプロイは、決して魔法ではありません。ローカルと本番の違いを正しく理解し、一つひとつの設定を丁寧に行うことで、誰でも乗り越えることができます。そして、自分の作ったサービスがインターネット上で動き出し、世界中の誰かがアクセスしてくれた時の感動は、何物にも代えがたいものです。このページで得た知識を元に、ぜひあなた自身のアプリケーションのデプロイに挑戦してみてください！"
-            },
+                script: "デプロイは、決して魔法ではありません。ローカルと本番の違いを正しく理解し、一つひとつの設定を丁寧に行うことで、誰でも乗り越えることができます。そして、自分の作ったサービスがインターネット上で動き出し、世界中の誰かがアクセスしてくれた時の感動は、何物にも代えがたいものです。このページで得た知識を元に、ぜひあなた自身のアプリケーションのデプロイに挑戦してみてください！",
+                onShow: function() {
+                    // This is a new property to run JS when the slide is shown
+                    const btn = document.getElementById('launch-btn');
+                    const stage = document.getElementById('animation-stage');
+                    if (btn && stage) {
+                        // Reset animation
+                        stage.classList.remove('animate');
+                        const users = stage.querySelectorAll('.user');
+                        users.forEach(u => {
+                            u.style.color = 'initial';
+                            u.style.transform = u.style.transform.replace('scale(1.3)', 'scale(1)');
+                        });
+
+                        // Re-add click listener
+                        btn.onclick = () => {
+                            stage.classList.add('animate');
+
+                            // Change user icons to smiles after animation
+                            setTimeout(() => {
+                                users.forEach(u => u.textContent = '😊');
+                            }, 4500);
+
+                            // Allow re-playing the animation
+                            setTimeout(() => {
+                                stage.classList.remove('animate');
+                                users.forEach(u => {
+                                    u.textContent = '👤';
+                                    u.style.color = 'initial';
+                                });
+                            }, 6000);
+                        };
+                    }
+                }
+            }
         ];
 
         let currentSlide = 0;
@@ -1020,6 +1148,40 @@
                 currentSlide--;
                 showSlide(currentSlide);
             }
+        }
+
+        function showSlide(index) {
+            // Hide all slides
+            document.querySelectorAll('.slide').forEach(slide => {
+                slide.classList.remove('active');
+            });
+
+            // Show current slide
+            const slideToShow = document.getElementById(`slide-${index}`);
+            if (slideToShow) {
+                slideToShow.classList.add('active');
+            }
+
+            // If it's the interactive slide, run its script
+            if (index === 3) {
+                runSlide4Script();
+            }
+
+            // ★★★ NEW: Run onShow function if it exists ★★★
+            if (slidesData[index].onShow) {
+                slidesData[index].onShow();
+            }
+            // ★★★ END OF NEW CODE ★★★
+
+            // Update script
+            scriptText.textContent = slidesData[index].script;
+
+            // Update slide number
+            currentSlideNum.textContent = index + 1;
+
+            // Update button states
+            prevBtn.disabled = index === 0;
+            nextBtn.disabled = index === slidesData.length - 1;
         }
 
         // Initialize the presentation
